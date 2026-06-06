@@ -74,17 +74,17 @@
         const BOT_USERNAME = 'BotWork1_bot';
 
         function showError(message) {
-            document.getElementById('app').innerHTML = `<div class="error">❌ ${message}<br><br>🔄 <a href="#" onclick="location.reload()">Попробовать снова</a></div>`;
+            document.getElementById('app').innerHTML = '<div class="error">❌ ' + message + '<br><br>🔄 <a href="#" onclick="location.reload()">Попробовать снова</a></div>';
         }
 
         function escapeHtml(text) {
             if (!text) return '';
-            return text.replace(/[&<>]/g, function(m) {
+            return String(text).replace(/[&<>]/g, function(m) {
                 if (m === '&') return '&amp;';
                 if (m === '<') return '&lt;';
                 if (m === '>') return '&gt;';
                 return m;
-            }).replace(/\n/g, '<br>');
+            });
         }
 
         function formatPrice(price) {
@@ -114,65 +114,65 @@
 
         if (product && product.name) {
             let html = '<div class="product-card">';
-            
-            // Фото товара
+
+            // Фото товара - берём первую ссылку
             if (product.image_url && product.image_url !== '') {
                 let images = product.image_url.split(',');
                 for (let i = 0; i < images.length && i < 1; i++) {
                     let imgUrl = images[i].trim();
-                    if (imgUrl.startsWith('http')) {
-                        html += `<img class="product-image" src="${imgUrl}" alt="Фото товара" onerror="this.style.display='none'">`;
+                    if (imgUrl && imgUrl !== '' && imgUrl.startsWith('http')) {
+                        html += '<img class="product-image" src="' + imgUrl + '" alt="Фото товара" onerror="this.style.display=\'none\'">';
                         break;
                     }
                 }
             }
             
             // Название
-            html += `<div class="product-name">${escapeHtml(product.name)}</div>`;
+            html += '<div class="product-name">' + escapeHtml(product.name) + '</div>';
             
             // Цена
-            html += `<div class="product-price">${formatPrice(product.price)}</div>`;
+            html += '<div class="product-price">' + formatPrice(product.price) + '</div>';
             
             // Артикул
             if (product.article) {
-                html += `<div class="product-article">🔢 Артикул: ${escapeHtml(product.article)}</div>`;
+                html += '<div class="product-article">🔢 Артикул: ' + escapeHtml(product.article) + '</div>';
             }
             
             // Бренд
             if (product.brand) {
-                html += `<div class="product-brand">🏷 Бренд: ${escapeHtml(product.brand)}</div>`;
+                html += '<div class="product-brand">🏷 Бренд: ' + escapeHtml(product.brand) + '</div>';
             }
             
             // Категория
             if (product.subcategory) {
-                html += `<div class="product-subcategory">📂 Категория: ${escapeHtml(product.subcategory)}</div>`;
+                html += '<div class="product-subcategory">📂 Категория: ' + escapeHtml(product.subcategory) + '</div>';
             }
             
             // Наличие
             if (product.stock && product.stock !== '0') {
-                html += `<div class="product-stock">📦 В наличии: ${product.stock} шт.</div>`;
+                html += '<div class="product-stock">📦 В наличии: ' + product.stock + ' шт.</div>';
             } else {
-                html += `<div class="product-stock">⏳ Под заказ (1-3 дня)</div>`;
+                html += '<div class="product-stock">⏳ Под заказ (1-3 дня)</div>';
             }
             
             // Описание
             if (product.description && product.description !== '') {
-                html += `<div class="product-description">📝 ${escapeHtml(product.description)}</div>`;
+                html += '<div class="product-description">📝 ' + escapeHtml(product.description) + '</div>';
             }
             
             // Характеристики
             if (product.characteristics && product.characteristics !== '') {
-                html += `<div class="product-characteristics">🔧 Характеристики:<br>${escapeHtml(product.characteristics)}</div>`;
+                html += '<div class="product-characteristics">🔧 Характеристики:<br>' + escapeHtml(product.characteristics) + '</div>';
             }
             
             // Кнопка заказа
-            html += `<button class="order-button" onclick="orderProduct()">📦 Заказать</button>`;
+            html += '<button class="order-button" onclick="orderProduct()">📦 Заказать</button>';
             html += '</div>';
             
             document.getElementById('app').innerHTML = html;
             
             WebApp.MainButton.setText('📦 Заказать');
-            WebApp.MainButton.onClick(() => orderProduct());
+            WebApp.MainButton.onClick(function() { orderProduct(); });
             WebApp.MainButton.show();
         } else if (product && !product.name) {
             showError('Неверный формат данных товара');
@@ -183,8 +183,8 @@
         function orderProduct() {
             const productName = document.querySelector('.product-name')?.innerText || 'товар';
             const article = document.querySelector('.product-article')?.innerText.replace('🔢 Артикул: ', '') || '';
-            const message = `Здравствуйте! Хочу заказать: ${productName} (артикул: ${article})`;
-            WebApp.openTelegramLink(`https://t.me/${BOT_USERNAME}?text=${encodeURIComponent(message)}`);
+            const message = 'Здравствуйте! Хочу заказать: ' + productName + ' (артикул: ' + article + ')';
+            WebApp.openTelegramLink('https://t.me/' + BOT_USERNAME + '?text=' + encodeURIComponent(message));
         }
     </script>
 </body>
