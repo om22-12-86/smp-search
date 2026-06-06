@@ -50,7 +50,7 @@
         WebApp.ready();
         WebApp.expand();
         const BOT_USERNAME = 'BotWork1_bot';
-        const API_URL = 'https://abroad-lights-trans-spotlight.trycloudflare.com/products';
+        const API_URL = 'https://addresses-statistics-recommendation-pic.trycloudflare.com/products';
         const CARD_BASE_URL = 'https://om22-12-86.github.io/smp-search/index.html';
 
         let allProducts = [];
@@ -120,7 +120,11 @@
                 article: product.article,
                 brand: product.brand,
                 price: product.price,
-                subcategory: product.subcategory
+                subcategory: product.subcategory,
+                description: product.description || '',
+                characteristics: product.characteristics || '',
+                image_url: product.image_url || '',
+                stock: product.stock || ''
             };
             const jsonStr = JSON.stringify(productData);
             const encodedData = btoa(unescape(encodeURIComponent(jsonStr)));
