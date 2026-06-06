@@ -53,98 +53,104 @@
         const CARD_BASE_URL = 'https://om22-12-86.github.io/smp-search/index.html';
 
         let allProducts = [];
-        let currentSubcategory = "all";
+        let currentSubcategory = 'all';
         let uniqueSubcategories = [];
 
-        const productsData = [{"name": "ASUS Vivobook 14 Pro 14\" 2880x1800 3K OLED Intel Core Ultra 7 258V 32GB/1TB", "article": "S5406S", "brand": "ASUS", "price": "134990", "subcategory": "Ультрабуки"}, {"name": "ASUS ROG Strix G16 16\" 2560x1600 240Hz Ryzen 9 9955HX 32GB/1TB RTX 5070 Ti", "article": "G614FR-ES96", "brand": "ASUS", "price": "259990", "subcategory": "Игровые ноутбуки"}, {"name": "ASUS X1504VA-BQ5273 15.6\" Intel Core 5 120U 16GB/512GB", "article": "X1504VA-BQ5273", "brand": "ASUS", "price": "57990", "subcategory": "Для офиса и учёбы"}, {"name": "ASUS Zenbook 14 UX3406K Ryzen AI 7 32GB/1TB", "article": "UM3406KA", "brand": "ASUS", "price": "129990", "subcategory": "Ультрабуки"}, {"name": "ASUS ROG Strix G16 16\" Ryzen 9-8940HX RTX 5070 16GB/1TB", "article": "G614PP-WH94", "brand": "ASUS", "price": "219990", "subcategory": "Игровые ноутбуки"}, {"name": "ASUS Vivobook S14 S3407VA-LY083 Intel Core 5 16GB/512GB", "article": "S3407VA-LY083", "brand": "ASUS", "price": "68990", "subcategory": "Для офиса и учёбы"}, {"name": "ASUS ROG Strix G16 16\" Ryzen 9 9955HX RTX 5060 16GB/1TB", "article": "G614FM-WS94", "brand": "ASUS", "price": "199990", "subcategory": "Игровые ноутбуки"}, {"name": "ASUS TUF Gaming F17 17.3\" i5 RTX 3050 16GB/512GB", "article": "90NR0MY5-M003P0", "brand": "ASUS", "price": "89990", "subcategory": "Игровые ноутбуки"}, {"name": "ASUS ROG Zephyrus G16 16\" Ultra 9 RTX 5070 16GB/1TB", "article": "GU605CP-G16", "brand": "ASUS", "price": "219990", "subcategory": "Игровые ноутбуки"}, {"name": "ASUS TUF Gaming A16 16\" Ryzen 7 RTX 5060 16GB/1TB", "article": "FA608UM-NS73", "brand": "ASUS", "price": "169990", "subcategory": "Игровые ноутбуки"}, {"name": "ASUS ROG Zephyrus G14 14\" Ryzen 9 RTX 5070 Ti 32GB/2TB", "article": "GA403WR-XS97", "brand": "ASUS", "price": "239990", "subcategory": "Игровые ноутбуки"}, {"name": "ASUS ROG Rapture GT-AX11000 Pro Tri-Band Wi-Fi 6E Gaming Router", "article": "GT-AX11000-Pro", "brand": "ASUS", "price": "28990", "subcategory": "Сетевые устройства"}, {"name": "ASUS ROG Xbox Ally 7\" 120Hz Ryzen Z2 Extreme 16GB/4TB", "article": "RC73YA-XB-4TB", "brand": "ASUS", "price": "124990", "subcategory": "Портативные консоли"}, {"name": "ASUS ROG Xbox Ally 7\" 120Hz Ryzen Z2 Extreme 16GB/2TB", "article": "RC73YA-XB-2TB", "brand": "ASUS", "price": "94990", "subcategory": "Портативные консоли"}, {"name": "ASUS ROG Xbox Ally 7\" 120Hz Ryzen Z2 Extreme 16GB/1TB", "article": "RC73YA-XB-1TB", "brand": "ASUS", "price": "79990", "subcategory": "Портативные консоли"}, {"name": "Lenovo IdeaPad 5 Pro Ryzen 5 8GB/512GB", "article": "82L500F5US", "brand": "Lenovo", "price": "64990", "subcategory": "Для офиса и учёбы"}, {"name": "Lenovo LOQ 15 Gaming Laptop", "article": "83DX00AVUS", "brand": "Lenovo", "price": "139990", "subcategory": "Игровые ноутбуки"}, {"name": "Lenovo ThinkCentre M75s Gen 2 Ryzen 5 PRO 5650G 16GB/256GB SFF", "article": "11R80051US", "brand": "Lenovo", "price": "57990", "subcategory": "Для офиса и учёбы"}, {"name": "Lenovo ThinkCentre M70q Gen 5 Tiny i5-14400T", "article": "12TD001UUS", "brand": "Lenovo", "price": "59990", "subcategory": "Для офиса и учёбы"}, {"name": "Lenovo IdeaPad 5 14 2-in-1 Snapdragon X Plus", "article": "83GH000AUS", "brand": "Lenovo", "price": "114990", "subcategory": "Трансформеры"}, {"name": "Lenovo ThinkBook 15 G4 ABA", "article": "21DL009WUS", "brand": "Lenovo", "price": "89990", "subcategory": "Для офиса и учёбы"}, {"name": "Lenovo ThinkPad X1 Carbon Aura Edition", "article": "21QA005NCD", "brand": "Lenovo", "price": "199990", "subcategory": "Ультрабуки"}, {"name": "Lenovo Legion Pro 5 Ryzen 9 RTX 5070", "article": "83F2002CUS", "brand": "Lenovo", "price": "219990", "subcategory": "Игровые ноутбуки"}, {"name": "Lenovo IdeaPad Slim 3 Ryzen 7 16GB/512GB", "article": "82XM00LMUS", "brand": "Lenovo", "price": "57990", "subcategory": "Для офиса и учёбы"}, {"name": "Lenovo Legion Pro 5 16\" Ultra 7 RTX 5070", "article": "83F000PUS", "brand": "Lenovo", "price": "199990", "subcategory": "Игровые ноутбуки"}, {"name": "Lenovo Yoga 7i 2-in-1 16\" Ultra 5", "article": "83JT0000US", "brand": "Lenovo", "price": "124990", "subcategory": "Трансформеры"}, {"name": "Lenovo Legion 5i 15.1\" i7 RTX 5060", "article": "83LY0000US", "brand": "Lenovo", "price": "189990", "subcategory": "Игровые ноутбуки"}, {"name": "Lenovo Yoga Slim 7x Snapdragon X Elite", "article": "83ED0001US", "brand": "Lenovo", "price": "139990", "subcategory": "Ультрабуки"}, {"name": "Lenovo IdeaPad 5 14 2-in-1 Snapdragon X Plus", "article": "83GH000AUS", "brand": "Lenovo", "price": "114990", "subcategory": "Трансформеры"}, {"name": "Lenovo Legion 5 Ryzen AI 7 RTX 5070", "article": "83F00006US", "brand": "Lenovo", "price": "179990", "subcategory": "Игровые ноутбуки"}, {"name": "Lenovo Legion Pro 5 Ultra 7 RTX 5070", "article": "83F000PUS", "brand": "Lenovo", "price": "199990", "subcategory": "Игровые ноутбуки"}, {"name": "Lenovo LOQ 15 Ryzen 7 RTX 5060 16GB/512GB", "article": "83JG007PUS", "brand": "Lenovo", "price": "139990", "subcategory": "Игровые ноутбуки"}, {"name": "Lenovo Yoga 7i 2-in-1 16\" Ultra 5", "article": "83JT0000US", "brand": "Lenovo", "price": "124990", "subcategory": "Трансформеры"}, {"name": "Lenovo Legion Pro 5 RTX 5060", "article": "83F30009US", "brand": "Lenovo", "price": "179990", "subcategory": "Игровые ноутбуки"}, {"name": "Lenovo Legion Pro 5 Ultra 9 RTX 5070 32GB", "article": "83F3000HUS", "brand": "Lenovo", "price": "219990", "subcategory": "Игровые ноутбуки"}, {"name": "Lenovo ThinkPad X1 Carbon Gen 13 Aura", "article": "21NS006NCD", "brand": "Lenovo", "price": "199990", "subcategory": "Ультрабуки"}, {"name": "Lenovo LOQ 15 Ryzen 7 RTX 5060 16GB/512GB", "article": "83JG007PUS", "brand": "Lenovo", "price": "139990", "subcategory": "Игровые ноутбуки"}, {"name": "Lenovo IdeaPad 5i 2-in-1 16\" Ultra 7", "article": "83KS0012US", "brand": "Lenovo", "price": "114990", "subcategory": "Трансформеры"}, {"name": "Lenovo Legion 5 Ryzen AI 7 RTX 5070", "article": "83F10005US", "brand": "Lenovo", "price": "179990", "subcategory": "Игровые ноутбуки"}, {"name": "Lenovo Yoga Slim 7i Aura Edition 15.3\"", "article": "83HM0001US", "brand": "Lenovo", "price": "144990", "subcategory": "Ультрабуки"}, {"name": "Lenovo Legion Pro 5 Ultra 9 RTX 5070 32GB", "article": "83F3000HUS", "brand": "Lenovo", "price": "219990", "subcategory": "Игровые ноутбуки"}, {"name": "Lenovo Legion Pro 7i Gen 10 RTX 5090", "article": "83F5006GUS", "brand": "Lenovo", "price": "399990", "subcategory": "Игровые ноутбуки"}, {"name": "Lenovo Legion 7 16\" RTX 5070", "article": "83KY002US", "brand": "Lenovo", "price": "259990", "subcategory": "Игровые ноутбуки"}, {"name": "Lenovo V15 G4 ABP 15.6\" FHD Ryzen 7 7730U 16GB/512GB", "article": "LV15-G4-ABP-Ryzen7", "brand": "Lenovo", "price": "65990", "subcategory": "Для офиса и учёбы"}, {"name": "MSI Vector 16 HX AI Ultra 9 RTX 5080 32GB/2TB", "article": "A2XWIG-058", "brand": "MSI", "price": "299990", "subcategory": "Игровые ноутбуки"}, {"name": "MSI Commercial 14 A13MG i5", "article": "HA13MG-002", "brand": "MSI", "price": "79990", "subcategory": "Для офиса и учёбы"}, {"name": "MSI Commercial 14 A13MG i7 vPro", "article": "HA13MG-009", "brand": "MSI", "price": "99990", "subcategory": "Для офиса и учёбы"}, {"name": "MSI Venture A16 AI+ Ryzen AI 7", "article": "A3HMG-014", "brand": "MSI", "price": "124990", "subcategory": "Ультрабуки"}, {"name": "MSI Venture A14 AI+ Ryzen AI 7 OLED", "article": "A3HMG-005", "brand": "MSI", "price": "119990", "subcategory": "Ультрабуки"}, {"name": "MSI Katana 15 HX i7-14650HX RTX 5070", "article": "B14WGK-293", "brand": "MSI", "price": "159990", "subcategory": "Игровые ноутбуки"}, {"name": "MSI Prestige 13 Evo i5", "article": "A12M-070", "brand": "MSI", "price": "89990", "subcategory": "Ультрабуки"}, {"name": "MSI Raider 18 HX Ryzen 9 RTX 5080", "article": "A9WIG-082", "brand": "MSI", "price": "329990", "subcategory": "Игровые ноутбуки"}, {"name": "MSI Cyborg A15 RTX 5060", "article": "B2RWFKG-071", "brand": "MSI", "price": "119990", "subcategory": "Игровые ноутбуки"}, {"name": "MSI Raider 18 HX AI Ultra 9 RTX 5090", "article": "A2XWJG-069", "brand": "MSI", "price": "449990", "subcategory": "Игровые ноутбуки"}, {"name": "MSI Raider 18 HX Ultra 9 RTX 5070 Ti", "article": "A2XWHG-437", "brand": "MSI", "price": "269990", "subcategory": "Игровые ноутбуки"}, {"name": "MSI Vector 16 HX AI Ultra 7 RTX 5070 Ti", "article": "A2XWHG-285", "brand": "MSI", "price": "219990", "subcategory": "Игровые ноутбуки"}, {"name": "MSI Stealth 16 AI Ryzen AI 9 RTX 5070 Ti", "article": "A3XWHG-079", "brand": "MSI", "price": "249990", "subcategory": "Игровые ноутбуки"}, {"name": "MSI Stealth 16 AI Ryzen AI 9 RTX 5070 Ti 64GB", "article": "A3XWHG-207", "brand": "MSI", "price": "279990", "subcategory": "Игровые ноутбуки"}, {"name": "MSI Titan 18 HX Dragon RTX 5090", "article": "A2XWJG-440", "brand": "MSI", "price": "459990", "subcategory": "Игровые ноутбуки"}, {"name": "MSI Vector 16 HX AI Ultra 9 RTX 5080", "article": "A2XWIG-058", "brand": "MSI", "price": "299990", "subcategory": "Игровые ноутбуки"}, {"name": "MSI Cyborg A15 RTX 5050", "article": "B2RWEKG-258", "brand": "MSI", "price": "109990", "subcategory": "Игровые ноутбуки"}, {"name": "MSI MAG CoreLiquid E240 White", "article": "MAG-E240-White", "brand": "MSI", "price": "8990", "subcategory": "Комплектующие"}, {"name": "HP OMEN 16 MAX 16.1\" QHD 240Hz Ryzen AI 9 RTX 5060", "article": "HP-OMEN-16-MAX", "brand": "HP", "price": "179990", "subcategory": "Игровые ноутбуки"}, {"name": "HP OmniBook 7 16\" Intel Core 5", "article": "16Z-AK000", "brand": "HP", "price": "119990", "subcategory": "Ультрабуки"}, {"name": "HP OmniBook 5 16\" Ryzen AI 7", "article": "16-AZ0062TU", "brand": "HP", "price": "119990", "subcategory": "Ультрабуки"}, {"name": "HP Omen 16 Slim Ultra 9 RTX 5070", "article": "16-AN0119NR", "brand": "HP", "price": "189990", "subcategory": "Игровые ноутбуки"}, {"name": "HP Omen 16 Ultra 9 RTX 5070", "article": "16-AN0075CL", "brand": "HP", "price": "199990", "subcategory": "Игровые ноутбуки"}, {"name": "HP OmniBook 5 16\" Ryzen AI 7", "article": "16-AG1067ST", "brand": "HP", "price": "119990", "subcategory": "Ультрабуки"}, {"name": "HP OmniBook 5 16\" Snapdragon X", "article": "16-FB0037NR", "brand": "HP", "price": "99990", "subcategory": "Ультрабуки"}, {"name": "HP OMEN 16 MAX Ryzen AI 9 RTX 5080", "article": "16-AK0098NR", "brand": "HP", "price": "259990", "subcategory": "Игровые ноутбуки"}, {"name": "HP OMEN 16 Ryzen AI 9 RTX 5070", "article": "16-AP0097NR", "brand": "HP", "price": "189990", "subcategory": "Игровые ноутбуки"}, {"name": "HP Omen 16 Slim Ultra 7 RTX 5060", "article": "16T-AN000", "brand": "HP", "price": "169990", "subcategory": "Игровые ноутбуки"}, {"name": "HP OmniBook 5 16\" Intel Core i5", "article": "16-BA1005ST", "brand": "HP", "price": "89990", "subcategory": "Ультрабуки"}, {"name": "HP Omen 16 Slim Ultra 5 RTX 5050", "article": "16-AN0027WM", "brand": "HP", "price": "129990", "subcategory": "Игровые ноутбуки"}, {"name": "HP OmniBook X Flip 16\" Ultra 5", "article": "16-AS0013DX", "brand": "HP", "price": "119990", "subcategory": "Трансформеры"}, {"name": "HP Laptop 15.6\" Ultra 5 125H", "article": "15-FD1870N", "brand": "HP", "price": "79990", "subcategory": "Для офиса и учёбы"}, {"name": "Dell Alienware 16 Area-51 RTX 5070", "article": "AA16250", "brand": "Dell", "price": "229990", "subcategory": "Игровые ноутбуки"}, {"name": "Dell Pro 16 Intel Core 5", "article": "C8G51", "brand": "Dell", "price": "79990", "subcategory": "Для офиса и учёбы"}, {"name": "Dell 14 Plus Ultra 7", "article": "DB14250", "brand": "Dell", "price": "149990", "subcategory": "Ультрабуки"}, {"name": "Dell Alienware 18 Area-51 RTX 5090", "article": "AA18250", "brand": "Dell", "price": "449990", "subcategory": "Игровые ноутбуки"}, {"name": "Dell Alienware Aurora 16 RTX 5050", "article": "AA16250", "brand": "Dell", "price": "144990", "subcategory": "Игровые ноутбуки"}, {"name": "Dell 16 Plus Ultra 7", "article": "LDB06250", "brand": "Dell", "price": "154990", "subcategory": "Ультрабуки"}, {"name": "Acer Predator Triton 14 14\" 250Hz Mini LED i7-13700H RTX 4070 16GB/1TB", "article": "PT14-51-7979", "brand": "Acer", "price": "189990", "subcategory": "Игровые ноутбуки"}, {"name": "Acer Aspire 3 15.6\" FHD Ryzen 5 7520U 16GB/512GB", "article": "A315-Ryzen5", "brand": "Acer", "price": "47990", "subcategory": "Для офиса и учёбы"}, {"name": "Acer Predator Helios Neo 18 Ultra 9 RTX 5070 Ti", "article": "PHN18-72-92Y3", "brand": "Acer", "price": "229990", "subcategory": "Игровые ноутбуки"}, {"name": "Acer Nitro V16 Ryzen 7 RTX 5060", "article": "ANV16-42-R0ZT", "brand": "Acer", "price": "134000", "subcategory": "Игровые ноутбуки"}, {"name": "Acer Aspire 3 Ryzen 5", "article": "A315-24PT-R288", "brand": "Acer", "price": "47990", "subcategory": "Для офиса и учёбы"}, {"name": "Acer Nitro V16S Ryzen 7 RTX 5070", "article": "ANV16S-41-R2DX", "brand": "Acer", "price": "149990", "subcategory": "Игровые ноутбуки"}, {"name": "Acer Predator Helios Neo 16 Ultra 7 RTX 5070", "article": "PHN16-73-7166", "brand": "Acer", "price": "189990", "subcategory": "Игровые ноутбуки"}, {"name": "Acer Nitro Lite 16 RTX 3050", "article": "NL16-71G-57PK", "brand": "Acer", "price": "79990", "subcategory": "Игровые ноутбуки"}, {"name": "Acer Nitro V16 Ryzen 5 RTX 5050", "article": "ANV16-42-R309", "brand": "Acer", "price": "99990", "subcategory": "Игровые ноутбуки"}, {"name": "Honor MagicBook X14 i3", "article": "5301ALXB", "brand": "Honor", "price": "49990", "subcategory": "Для офиса и учёбы"}, {"name": "Honor MagicBook Pro 16 RTX 4060", "article": "5301ALXB", "brand": "Honor", "price": "159990", "subcategory": "Для графики и дизайна"}, {"name": "Gigabyte 16\" i7 RTX 5050", "article": "CTHI3KZC64SD", "brand": "Gigabyte", "price": "119990", "subcategory": "Игровые ноутбуки"}, {"name": "RASKAT Intel Core i7-1255U 16GB/512GB", "article": "RASKAT", "brand": "RASKAT", "price": "64990", "subcategory": "Для офиса и учёбы"}, {"name": "Thunderobot Radiant 16 S Ryzen 9 RTX 5070", "article": "THUNDEROBOT-RADIANT", "brand": "Thunderobot", "price": "189990", "subcategory": "Игровые ноутбуки"}, {"name": "Razer Blade 18 18\" Ultra 9 RTX 5090", "article": "RZ09-05299ER9", "brand": "Razer", "price": "459990", "subcategory": "Игровые ноутбуки"}, {"name": "Thunderobot Zero 18 Pro Ultra 9 RTX 5090", "article": "THUNDEROBOT-ZERO-18", "brand": "Thunderobot", "price": "389990", "subcategory": "Игровые ноутбуки"}, {"name": "Thunderobot Zero 16 Pro Ultra 9 RTX 5070 Ti", "article": "THUNDEROBOT-ZERO-16", "brand": "Thunderobot", "price": "259990", "subcategory": "Игровые ноутбуки"}, {"name": "CHUWI GameBook 16\" Ryzen 9 RTX 5070 Ti 32GB/1TB", "article": "CHUWI-GAMEBOOK-16", "brand": "CHUWI", "price": "199990", "subcategory": "Игровые ноутбуки"}, {"name": "Microsoft Surface Arc Mouse (Black)", "article": "CZV-0097", "brand": "Microsoft", "price": "3990", "subcategory": "Аксессуары"}, {"name": "Microsoft Xbox Wireless Controller Electric Volt", "article": "QAU-00021", "brand": "Microsoft", "price": "5990", "subcategory": "Аксессуары"}, {"name": "Sonos Ace Over Ear Headphones - White", "article": "Sonos-Ace-White", "brand": "Sonos", "price": "44990", "subcategory": "Наушники"}, {"name": "Rode VideoMic Go II", "article": "Rode-VideoMicGoII", "brand": "RODE", "price": "12990", "subcategory": "Микрофоны"}, {"name": "SanDisk Extreme PRO 2TB USB4 Portable SSD", "article": "SDSSDE82-2T00", "brand": "SanDisk", "price": "28990", "subcategory": "Накопители"}, {"name": "SanDisk Extreme Portable 4TB SSD", "article": "SDSSDE61-4T00", "brand": "SanDisk", "price": "45990", "subcategory": "Накопители"}, {"name": "Meta Quest 3S 256GB", "article": "Meta-Quest-3S-256", "brand": "Meta", "price": "39990", "subcategory": "VR-гарнитуры"}, {"name": "Oura Ring 4 Cerulean Cloud (6-10)", "article": "Oura-Ring-4-Cer-Cloud", "brand": "Oura", "price": "44990", "subcategory": "Умные кольца"}, {"name": "Oura Ring 4 Cerulean Midnight (7-9)", "article": "Oura-Ring-4-Cer-Midnight", "brand": "Oura", "price": "44990", "subcategory": "Умные кольца"}, {"name": "Oura Ring 4 Cerulean Petal (6-9)", "article": "Oura-Ring-4-Cer-Petal", "brand": "Oura", "price": "44990", "subcategory": "Умные кольца"}, {"name": "Intel Core Ultra 7 265KF (LGA 1851)", "article": "BX80768265KF", "brand": "INTEL", "price": "42990", "subcategory": "Процессоры"}, {"name": "Google Pixel 10 128GB Obsidian", "article": "Google-Pixel-10", "brand": "GOOGLE", "price": "79990", "subcategory": "Смартфоны"}, {"name": "Google Pixel 10 Pro 128GB Moonstone", "article": "Google-Pixel-10-Pro", "brand": "GOOGLE", "price": "99990", "subcategory": "Смартфоны"}, {"name": "Google Pixel Watch 4 45mm Matte Black", "article": "Google-Pixel-Watch-4", "brand": "GOOGLE", "price": "34990", "subcategory": "Смарт-часы"}, {"name": "Garmin Fenix 8 51mm AMOLED Slate Gray/Black", "article": "Garmin-Fenix-8-51", "brand": "GARMIN", "price": "89990", "subcategory": "Смарт-часы"}, {"name": "Garmin Quatix 8 47mm", "article": "Garmin-Quatix-8-47", "brand": "GARMIN", "price": "94990", "subcategory": "Смарт-часы"}, {"name": "Garmin Tactix 8 51mm AMOLED", "article": "Garmin-Tactix-8-51", "brand": "GARMIN", "price": "124990", "subcategory": "Смарт-часы"}, {"name": "Garmin Instinct Crossover Solar Tactic", "article": "Garmin-Instinct-Crossover-Solar", "brand": "GARMIN", "price": "64990", "subcategory": "Смарт-часы"}, {"name": "Garmin Montana 710", "article": "Garmin-Montana-710", "brand": "GARMIN", "price": "79990", "subcategory": "Навигаторы"}, {"name": "Garmin d2 Air X10 Aviator White", "article": "Garmin-d2-Air-X10", "brand": "GARMIN", "price": "69990", "subcategory": "Смарт-часы"}, {"name": "Bose QuietComfort Headphones White", "article": "Bose-QC-White", "brand": "BOSE", "price": "32990", "subcategory": "Наушники"}, {"name": "Bose QuietComfort Headphones Black", "article": "Bose-QC-Black", "brand": "BOSE", "price": "32990", "subcategory": "Наушники"}];
+        // Данные из Google Sheets
+        const productsData = [
+            {"name": "ASUS Vivobook 14 Pro 14\" 2880x1800 3K OLED Intel Core Ultra 7 258V 32GB/1TB", "article": "S5406S", "brand": "ASUS", "price": "134990", "subcategory": "Ультрабуки"},
+            {"name": "ASUS ROG Strix G16 16\" 2560x1600 240Hz Ryzen 9 9955HX 32GB/1TB RTX 5070 Ti", "article": "G614FR-ES96", "brand": "ASUS", "price": "259990", "subcategory": "Игровые ноутбуки"},
+            {"name": "ASUS X1504VA-BQ5273 15.6\" Intel Core 5 120U 16GB/512GB", "article": "X1504VA-BQ5273", "brand": "ASUS", "price": "57990", "subcategory": "Для офиса и учёбы"},
+            {"name": "ASUS Zenbook 14 UX3406K Ryzen AI 7 32GB/1TB", "article": "UM3406KA", "brand": "ASUS", "price": "129990", "subcategory": "Ультрабуки"}
+        ];
 
         function loadProducts() {
             allProducts = productsData;
-            console.log("✅ Загружено товаров:", allProducts.length);
+            console.log('✅ Загружено товаров:', allProducts.length);
             
             if (allProducts.length === 0) {
-                document.getElementById("productsList").innerHTML = "<div class="error">📭 Товары не найдены</div>";
+                document.getElementById('productsList').innerHTML = '<div class="error">📭 Товары не найдены</div>';
                 return;
             }
             
             uniqueSubcategories = [...new Set(allProducts.map(p => p.subcategory))];
-            const filtersDiv = document.getElementById("filters");
-            filtersDiv.innerHTML = "<div class="filter-chip active" onclick="setFilter('all')">📦 Все категории</div>";
+            const filtersDiv = document.getElementById('filters');
+            filtersDiv.innerHTML = '<div class="filter-chip active" onclick="setFilter(\'all\')">📦 Все категории</div>';
             uniqueSubcategories.forEach(cat => {
-                filtersDiv.innerHTML += "<div class="filter-chip" onclick="setFilter('" + cat.replace(/'/g, "\'") + "')">" + cat + "</div>";
+                filtersDiv.innerHTML += '<div class="filter-chip" onclick="setFilter(\'' + cat.replace(/'/g, '\\\'') + '\')">' + cat + '</div>';
             });
             searchProducts();
         }
 
         function setFilter(category) {
             currentSubcategory = category;
-            document.querySelectorAll(".filter-chip").forEach(chip => {
-                chip.classList.remove("active");
-                if (chip.innerText === (category === "all" ? "📦 Все категории" : category)) {
-                    chip.classList.add("active");
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.classList.remove('active');
+                if (chip.innerText === (category === 'all' ? '📦 Все категории' : category)) {
+                    chip.classList.add('active');
                 }
             });
             searchProducts();
         }
 
         function searchProducts() {
-            const query = document.getElementById("searchInput").value.toLowerCase();
+            const query = document.getElementById('searchInput').value.toLowerCase();
             let filtered = [...allProducts];
-            if (currentSubcategory !== "all") {
+            if (currentSubcategory !== 'all') {
                 filtered = filtered.filter(p => p.subcategory === currentSubcategory);
             }
             if (query) {
                 filtered = filtered.filter(p => p.name.toLowerCase().includes(query) || p.brand.toLowerCase().includes(query) || p.article.includes(query));
             }
             displayProducts(filtered);
-            document.getElementById("stats").innerHTML = "🔍 Найдено: " + filtered.length + " товаров из " + allProducts.length;
+            document.getElementById('stats').innerHTML = '🔍 Найдено: ' + filtered.length + ' товаров из ' + allProducts.length;
         }
 
         function formatPrice(price) { 
             const p = parseInt(price); 
-            return isNaN(p) ? price : p.toLocaleString("ru-RU") + " ₽"; 
+            return isNaN(p) ? price : p.toLocaleString('ru-RU') + ' ₽'; 
         }
 
         function openProductCard(article, name, brand, price, subcategory) {
             const productData = { name: name, article: article, brand: brand, price: price, subcategory: subcategory };
             const jsonStr = JSON.stringify(productData);
             const encodedData = btoa(unescape(encodeURIComponent(jsonStr)));
-            const cardUrl = CARD_BASE_URL + "?data=" + encodeURIComponent(encodedData);
+            const cardUrl = CARD_BASE_URL + '?data=' + encodeURIComponent(encodedData);
             WebApp.openLink(cardUrl);
         }
 
         function displayProducts(products) {
-            const container = document.getElementById("productsList");
+            const container = document.getElementById('productsList');
             if (products.length === 0) { 
-                container.innerHTML = "<div class="no-results">😔 Товары не найдены</div>"; 
+                container.innerHTML = '<div class="no-results">😔 Товары не найдены</div>'; 
                 return; 
             }
-            container.innerHTML = "";
+            container.innerHTML = '';
             products.forEach(p => {
-                const card = document.createElement("div");
-                card.className = "product-card";
+                const card = document.createElement('div');
+                card.className = 'product-card';
                 card.onclick = () => openProductCard(p.article, p.name, p.brand, p.price, p.subcategory);
-                card.innerHTML = "<div class="product-name">" + escapeHtml(p.name.substring(0, 100)) + "</div>" +
-                    "<div class="product-price">" + formatPrice(p.price) + "</div>" +
-                    "<div class="product-article">🔢 Артикул: " + p.article + "</div>" +
-                    "<div class="product-article">🏷 Бренд: " + p.brand + "</div>" +
-                    "<div class="product-subcategory">📂 " + p.subcategory + "</div>";
+                card.innerHTML = '<div class="product-name">' + escapeHtml(p.name.substring(0, 100)) + '</div>' +
+                    '<div class="product-price">' + formatPrice(p.price) + '</div>' +
+                    '<div class="product-article">🔢 Артикул: ' + p.article + '</div>' +
+                    '<div class="product-article">🏷 Бренд: ' + p.brand + '</div>' +
+                    '<div class="product-subcategory">📂 ' + p.subcategory + '</div>';
                 container.appendChild(card);
             });
         }
 
         function escapeHtml(text) { 
-            if (!text) return "";
+            if (!text) return '';
             return text.replace(/[&<>]/g, function(m) {
-                if (m === "&") return "&amp;";
-                if (m === "<") return "&lt;";
-                if (m === ">") return "&gt;";
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
                 return m;
             });
         }
 
-        document.getElementById("searchInput").addEventListener("keypress", function(e) { 
-            if (e.key === "Enter") searchProducts(); 
+        document.getElementById('searchInput').addEventListener('keypress', function(e) { 
+            if (e.key === 'Enter') searchProducts(); 
         });
         
         loadProducts();
