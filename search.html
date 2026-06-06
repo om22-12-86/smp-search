@@ -56,103 +56,116 @@
         let currentSubcategory = 'all';
         let uniqueSubcategories = [];
 
-        // Данные из Google Sheets
         const productsData = [
-            {"name": "ASUS Vivobook 14 Pro 14\" 2880x1800 3K OLED Intel Core Ultra 7 258V 32GB/1TB", "article": "S5406S", "brand": "ASUS", "price": "134990", "subcategory": "Ультрабуки"},
-            {"name": "ASUS ROG Strix G16 16\" 2560x1600 240Hz Ryzen 9 9955HX 32GB/1TB RTX 5070 Ti", "article": "G614FR-ES96", "brand": "ASUS", "price": "259990", "subcategory": "Игровые ноутбуки"},
-            {"name": "ASUS X1504VA-BQ5273 15.6\" Intel Core 5 120U 16GB/512GB", "article": "X1504VA-BQ5273", "brand": "ASUS", "price": "57990", "subcategory": "Для офиса и учёбы"},
-            {"name": "ASUS Zenbook 14 UX3406K Ryzen AI 7 32GB/1TB", "article": "UM3406KA", "brand": "ASUS", "price": "129990", "subcategory": "Ультрабуки"}
+            {name: "ASUS Vivobook 14 Pro", article: "S5406S", brand: "ASUS", price: "134990", subcategory: "Ультрабуки"},
+            {name: "ASUS ROG Strix G16", article: "G614FR-ES96", brand: "ASUS", price: "259990", subcategory: "Игровые ноутбуки"},
+            {name: "Lenovo Legion Pro 5", article: "83F2002CUS", brand: "Lenovo", price: "219990", subcategory: "Игровые ноутбуки"},
+            {name: "MSI Katana 15 HX", article: "B14WGK-293", brand: "MSI", price: "159990", subcategory: "Игровые ноутбуки"},
+            {name: "HP OMEN 16 MAX", article: "HP-OMEN-16-MAX", brand: "HP", price: "179990", subcategory: "Игровые ноутбуки"},
+            {name: "Dell Alienware 16", article: "AA16250", brand: "Dell", price: "229990", subcategory: "Игровые ноутбуки"},
+            {name: "Apple MacBook Pro", article: "MBP16-2025", brand: "Apple", price: "249990", subcategory: "Ультрабуки"},
+            {name: "Microsoft Surface Laptop", article: "SL7-2025", brand: "Microsoft", price: "149990", subcategory: "Ультрабуки"},
+            {name: "Xbox Wireless Controller", article: "QAU-00021", brand: "Microsoft", price: "5990", subcategory: "Аксессуары"},
+            {name: "Google Pixel 10", article: "Google-Pixel-10", brand: "Google", price: "79990", subcategory: "Смартфоны"},
+            {name: "Garmin Fenix 8", article: "Garmin-Fenix-8-51", brand: "Garmin", price: "89990", subcategory: "Смарт-часы"},
+            {name: "Meta Quest 3S", article: "Meta-Quest-3S-256", brand: "Meta", price: "39990", subcategory: "VR-гарнитуры"},
+            {name: "Bose QuietComfort", article: "Bose-QC-White", brand: "Bose", price: "32990", subcategory: "Наушники"}
         ];
 
         function loadProducts() {
             allProducts = productsData;
-            console.log('✅ Загружено товаров:', allProducts.length);
+            console.log("Loaded: " + allProducts.length);
             
-            if (allProducts.length === 0) {
-                document.getElementById('productsList').innerHTML = '<div class="error">📭 Товары не найдены</div>';
-                return;
+            var cats = {};
+            for (var i = 0; i < allProducts.length; i++) {
+                cats[allProducts[i].subcategory] = true;
+            }
+            uniqueSubcategories = Object.keys(cats);
+            
+            var filtersDiv = document.getElementById("filters");
+            filtersDiv.innerHTML = '<div class="filter-chip active" onclick="setFilter(\'all\')">📦 Все категории</div>';
+            for (var i = 0; i < uniqueSubcategories.length; i++) {
+                filtersDiv.innerHTML += '<div class="filter-chip" onclick="setFilter(\'' + uniqueSubcategories[i] + '\')">' + uniqueSubcategories[i] + '</div>';
             }
             
-            uniqueSubcategories = [...new Set(allProducts.map(p => p.subcategory))];
-            const filtersDiv = document.getElementById('filters');
-            filtersDiv.innerHTML = '<div class="filter-chip active" onclick="setFilter(\'all\')">📦 Все категории</div>';
-            uniqueSubcategories.forEach(cat => {
-                filtersDiv.innerHTML += '<div class="filter-chip" onclick="setFilter(\'' + cat.replace(/'/g, '\\\'') + '\')">' + cat + '</div>';
-            });
             searchProducts();
         }
 
         function setFilter(category) {
             currentSubcategory = category;
-            document.querySelectorAll('.filter-chip').forEach(chip => {
-                chip.classList.remove('active');
-                if (chip.innerText === (category === 'all' ? '📦 Все категории' : category)) {
-                    chip.classList.add('active');
+            var chips = document.querySelectorAll(".filter-chip");
+            for (var i = 0; i < chips.length; i++) {
+                chips[i].classList.remove("active");
+                if (chips[i].innerText === (category === "all" ? "📦 Все категории" : category)) {
+                    chips[i].classList.add("active");
                 }
-            });
+            }
             searchProducts();
         }
 
         function searchProducts() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            let filtered = [...allProducts];
-            if (currentSubcategory !== 'all') {
-                filtered = filtered.filter(p => p.subcategory === currentSubcategory);
-            }
-            if (query) {
-                filtered = filtered.filter(p => p.name.toLowerCase().includes(query) || p.brand.toLowerCase().includes(query) || p.article.includes(query));
+            var query = document.getElementById("searchInput").value.toLowerCase();
+            var filtered = [];
+            for (var i = 0; i < allProducts.length; i++) {
+                var p = allProducts[i];
+                if (currentSubcategory !== "all" && p.subcategory !== currentSubcategory) continue;
+                if (query && !p.name.toLowerCase().includes(query) && !p.brand.toLowerCase().includes(query) && !p.article.includes(query)) continue;
+                filtered.push(p);
             }
             displayProducts(filtered);
-            document.getElementById('stats').innerHTML = '🔍 Найдено: ' + filtered.length + ' товаров из ' + allProducts.length;
+            document.getElementById("stats").innerHTML = "🔍 Найдено: " + filtered.length + " товаров из " + allProducts.length;
         }
 
-        function formatPrice(price) { 
-            const p = parseInt(price); 
-            return isNaN(p) ? price : p.toLocaleString('ru-RU') + ' ₽'; 
+        function formatPrice(price) {
+            var p = parseInt(price);
+            return isNaN(p) ? price : p.toLocaleString("ru-RU") + " ₽";
         }
 
         function openProductCard(article, name, brand, price, subcategory) {
-            const productData = { name: name, article: article, brand: brand, price: price, subcategory: subcategory };
-            const jsonStr = JSON.stringify(productData);
-            const encodedData = btoa(unescape(encodeURIComponent(jsonStr)));
-            const cardUrl = CARD_BASE_URL + '?data=' + encodeURIComponent(encodedData);
+            var productData = { name: name, article: article, brand: brand, price: price, subcategory: subcategory };
+            var jsonStr = JSON.stringify(productData);
+            var encodedData = btoa(unescape(encodeURIComponent(jsonStr)));
+            var cardUrl = CARD_BASE_URL + "?data=" + encodeURIComponent(encodedData);
             WebApp.openLink(cardUrl);
         }
 
         function displayProducts(products) {
-            const container = document.getElementById('productsList');
-            if (products.length === 0) { 
-                container.innerHTML = '<div class="no-results">😔 Товары не найдены</div>'; 
-                return; 
+            var container = document.getElementById("productsList");
+            if (products.length === 0) {
+                container.innerHTML = '<div class="no-results">😔 Товары не найдены</div>';
+                return;
             }
-            container.innerHTML = '';
-            products.forEach(p => {
-                const card = document.createElement('div');
-                card.className = 'product-card';
-                card.onclick = () => openProductCard(p.article, p.name, p.brand, p.price, p.subcategory);
+            container.innerHTML = "";
+            for (var i = 0; i < products.length; i++) {
+                var p = products[i];
+                var card = document.createElement("div");
+                card.className = "product-card";
+                card.onclick = (function(article, name, brand, price, subcategory) {
+                    return function() { openProductCard(article, name, brand, price, subcategory); };
+                })(p.article, p.name, p.brand, p.price, p.subcategory);
                 card.innerHTML = '<div class="product-name">' + escapeHtml(p.name.substring(0, 100)) + '</div>' +
                     '<div class="product-price">' + formatPrice(p.price) + '</div>' +
                     '<div class="product-article">🔢 Артикул: ' + p.article + '</div>' +
                     '<div class="product-article">🏷 Бренд: ' + p.brand + '</div>' +
                     '<div class="product-subcategory">📂 ' + p.subcategory + '</div>';
                 container.appendChild(card);
-            });
+            }
         }
 
-        function escapeHtml(text) { 
-            if (!text) return '';
+        function escapeHtml(text) {
+            if (!text) return "";
             return text.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
+                if (m === "&") return "&amp;";
+                if (m === "<") return "&lt;";
+                if (m === ">") return "&gt;";
                 return m;
             });
         }
 
-        document.getElementById('searchInput').addEventListener('keypress', function(e) { 
-            if (e.key === 'Enter') searchProducts(); 
+        document.getElementById("searchInput").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") searchProducts();
         });
-        
+
         loadProducts();
     </script>
 </body>
