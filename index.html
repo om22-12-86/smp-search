@@ -34,12 +34,10 @@
         
         if (productData) {
             try {
-                let product;
-                try { product = JSON.parse(decodeURIComponent(productData)); }
-                catch(e) { product = JSON.parse(atob(decodeURIComponent(productData))); }
+                let product = JSON.parse(decodeURIComponent(productData));
                 displayProduct(product);
             } catch(e) {
-                document.getElementById('content').innerHTML = `<div class="error">❌ Ошибка: ${e.message}</div>`;
+                document.getElementById('content').innerHTML = `<div class="error">❌ Ошибка загрузки товара</div>`;
             }
         } else {
             document.getElementById('content').innerHTML = '<div class="error">❌ Товар не найден</div>';
@@ -68,7 +66,7 @@
         
         function orderProduct() {
             if (tg) { tg.sendData(JSON.stringify({ action: 'order' })); tg.close(); }
-            else { alert('Пожалуйста, откройте через Telegram'); }
+            else { alert('Откройте через Telegram'); }
         }
         
         function escapeHtml(text) {

@@ -34,58 +34,80 @@
         if (tg) { tg.ready(); tg.expand(); tg.setBackgroundColor('#f5f5f5'); }
         
         let products = [];
-        let API_URL = '';
-        
-        // Определяем API URL - используем текущий домен или localhost для разработки
-        async function getApiUrl() {
-            // Пробуем получить URL от Telegram WebApp
-            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                // В Telegram пробуем через относительный путь
-                return '/products';
-            }
-            // Для разработки используем localhost
-            return 'http://localhost:8090/products';
-        }
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQADU9Rh1HHUF1df3_aUHCGeC7O5qhrGzSHyBxAp6k_ix1zkn7DcZJihelQiq3Z9SlvQpQ2cc2cLgY6/pub?output=csv&gid=410009707';
         
         async function loadProducts() {
             const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '<div class="loading">📡 Загрузка товаров...</div>';
+            resultsDiv.innerHTML = '<div class="loading">📡 Загрузка данных из Google Sheets...</div>';
             
             try {
-                // Пробуем разные варианты API URL
-                const urlsToTry = [
-                    'https://cal-opinion-subtle-barriers.trycloudflare.com/products',
-                    'https://durable-noon-columnists-conducting.trycloudflare.com/products',
-                    'http://localhost:8090/products'
-                ];
+                console.log('📡 Загрузка CSV...');
+                const response = await fetch(CSV_URL);
+                const csvText = await response.text();
                 
-                let productsLoaded = false;
+                // Парсим CSV
+                const lines = csvText.split('\n');
+                const headers = parseCSVLine(lines[0]);
                 
-                for (const url of urlsToTry) {
-                    try {
-                        console.log('📡 Пробуем:', url);
-                        const response = await fetch(url);
-                        if (response.ok) {
-                            products = await response.json();
-                            console.log(`✅ Загружено ${products.length} товаров с ${url}`);
-                            productsLoaded = true;
-                            break;
-                        }
-                    } catch(e) {
-                        console.log('❌ Не удалось:', url, e.message);
-                    }
+                const nameIdx = headers.indexOf('name');
+                const articleIdx = headers.indexOf('article');
+                const brandIdx = headers.indexOf('brand');
+                const priceIdx = headers.indexOf('price');
+                const statusIdx = headers.indexOf('status');
+                const stockIdx = headers.indexOf('stock');
+                const imageIdx = headers.indexOf('image_url');
+                const descIdx = headers.indexOf('description');
+                
+                products = [];
+                
+                for (let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    const values = parseCSVLine(lines[i]);
+                    
+                    const status = values[statusIdx] || '';
+                    if (status.toLowerCase() !== 'active') continue;
+                    
+                    const stock = parseInt(values[stockIdx]) || 0;
+                    if (stock <= 0) continue;
+                    
+                    products.push({
+                        name: values[nameIdx] || 'Без названия',
+                        article: values[articleIdx] || '',
+                        brand: values[brandIdx] || 'Другие',
+                        price: (values[priceIdx] || '0').replace('₽', '').replace(/\s/g, ''),
+                        image_url: values[imageIdx] || '',
+                        description: values[descIdx] || '',
+                        stock: stock
+                    });
                 }
                 
-                if (productsLoaded) {
-                    filterProducts();
-                } else {
-                    resultsDiv.innerHTML = '<div class="error">❌ Не удалось загрузить товары<br><small>Попробуйте позже</small></div>';
-                }
+                console.log(`✅ Загружено ${products.length} товаров`);
+                filterProducts();
                 
             } catch(e) {
                 console.error('❌ Ошибка:', e);
-                resultsDiv.innerHTML = '<div class="error">❌ Ошибка загрузки товаров<br><small>Попробуйте позже</small></div>';
+                resultsDiv.innerHTML = '<div class="error">❌ Ошибка загрузки<br><small>Попробуйте позже</small></div>';
             }
+        }
+        
+        function parseCSVLine(line) {
+            const result = [];
+            let inQuote = false;
+            let current = '';
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    inQuote = !inQuote;
+                } else if (char === ',' && !inQuote) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current.trim());
+            return result.map(v => v.replace(/^"|"$/g, ''));
         }
         
         function filterProducts() {
@@ -101,16 +123,16 @@
             
             const resultsDiv = document.getElementById('results');
             if (filtered.length === 0) {
-                resultsDiv.innerHTML = `<div class="no-results">🔍 Ничего не найдено<br><small>Попробуйте другой поисковый запрос</small></div>`;
+                resultsDiv.innerHTML = `<div class="no-results">🔍 Ничего не найдено<br><small>Попробуйте другой запрос</small></div>`;
                 return;
             }
             
             const html = filtered.map(p => `
                 <div class="product-card" onclick="selectProduct(${encodeURIComponent(JSON.stringify(p))})">
-                    <div class="product-name">${escapeHtml(p.name || 'Без названия')}</div>
+                    <div class="product-name">${escapeHtml(p.name)}</div>
                     <div class="product-article">Артикул: ${p.article || '—'}</div>
                     <div class="product-price">${formatPrice(p.price)} ₽</div>
-                    <div class="product-brand">${escapeHtml(p.brand || 'Другие')}</div>
+                    <div class="product-brand">${escapeHtml(p.brand)}</div>
                 </div>
             `).join('');
             
@@ -120,8 +142,7 @@
         function selectProduct(product) {
             if (tg) {
                 const data = encodeURIComponent(JSON.stringify(product));
-                tg.sendData(JSON.stringify({ action: 'order', product: product }));
-                tg.close();
+                window.location.href = `index.html?data=${data}`;
             } else {
                 alert('Откройте через Telegram бота');
             }
