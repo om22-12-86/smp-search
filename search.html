@@ -7,38 +7,11 @@
     <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: #f5f5f5;
-            padding: 12px;
-            padding-bottom: 80px;
-        }
-        .search-container {
-            position: sticky;
-            top: 0;
-            background: #f5f5f5;
-            padding: 12px 0;
-            z-index: 100;
-        }
-        .search-input {
-            width: 100%;
-            padding: 12px 16px;
-            font-size: 16px;
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            outline: none;
-            background: white;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f5f5f5; padding: 12px; padding-bottom: 80px; }
+        .search-container { position: sticky; top: 0; background: #f5f5f5; padding: 12px 0; z-index: 100; }
+        .search-input { width: 100%; padding: 12px 16px; font-size: 16px; border: 1px solid #ddd; border-radius: 12px; outline: none; background: white; }
         .search-input:focus { border-color: #0088cc; }
-        .product-card {
-            background: white;
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: transform 0.1s;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
+        .product-card { background: white; border-radius: 12px; padding: 12px; margin-bottom: 10px; cursor: pointer; transition: transform 0.1s; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .product-card:active { transform: scale(0.98); }
         .product-name { font-weight: 600; font-size: 15px; margin-bottom: 6px; color: #1a1a1a; }
         .product-article { font-size: 12px; color: #666; margin-bottom: 6px; }
@@ -58,79 +31,56 @@
     
     <script>
         let tg = window.Telegram?.WebApp;
-        if (tg) {
-            tg.ready();
-            tg.expand();
-            tg.setBackgroundColor('#f5f5f5');
-        }
+        if (tg) { tg.ready(); tg.expand(); tg.setBackgroundColor('#f5f5f5'); }
         
         let products = [];
-        const GOOGLE_SHEETS_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQADU9Rh1HHUF1df3_aUHCGeC7O5qhrGzSHyBxAp6k_ix1zkn7DcZJihelQiq3Z9SlvQpQ2cc2cLgY6/pub?output=csv&gid=410009707';
+        let API_URL = '';
+        
+        // Определяем API URL - используем текущий домен или localhost для разработки
+        async function getApiUrl() {
+            // Пробуем получить URL от Telegram WebApp
+            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                // В Telegram пробуем через относительный путь
+                return '/products';
+            }
+            // Для разработки используем localhost
+            return 'http://localhost:8090/products';
+        }
         
         async function loadProducts() {
             const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '<div class="loading">📡 Загрузка данных из Google Sheets...</div>';
+            resultsDiv.innerHTML = '<div class="loading">📡 Загрузка товаров...</div>';
             
             try {
-                console.log('📡 Загрузка с Google Sheets...');
-                const response = await fetch(GOOGLE_SHEETS_CSV);
-                const csvText = await response.text();
+                // Пробуем разные варианты API URL
+                const urlsToTry = [
+                    'https://cal-opinion-subtle-barriers.trycloudflare.com/products',
+                    'https://durable-noon-columnists-conducting.trycloudflare.com/products',
+                    'http://localhost:8090/products'
+                ];
                 
-                const lines = csvText.split('\n');
-                const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
+                let productsLoaded = false;
                 
-                const idxStatus = headers.findIndex(h => h === 'status');
-                const idxStock = headers.findIndex(h => h === 'stock');
-                const idxName = headers.findIndex(h => h === 'name');
-                const idxArticle = headers.findIndex(h => h === 'article');
-                const idxBrand = headers.findIndex(h => h === 'brand');
-                const idxPrice = headers.findIndex(h => h === 'price');
-                const idxImage = headers.findIndex(h => h === 'image_url');
-                const idxDescription = headers.findIndex(h => h === 'description');
-                
-                products = [];
-                
-                for (let i = 1; i < lines.length; i++) {
-                    if (!lines[i].trim()) continue;
-                    
-                    let line = lines[i];
-                    let values = [];
-                    let inQuote = false;
-                    let current = '';
-                    
-                    for (let j = 0; j < line.length; j++) {
-                        const char = line[j];
-                        if (char === '"') {
-                            inQuote = !inQuote;
-                        } else if (char === ',' && !inQuote) {
-                            values.push(current);
-                            current = '';
-                        } else {
-                            current += char;
+                for (const url of urlsToTry) {
+                    try {
+                        console.log('📡 Пробуем:', url);
+                        const response = await fetch(url);
+                        if (response.ok) {
+                            products = await response.json();
+                            console.log(`✅ Загружено ${products.length} товаров с ${url}`);
+                            productsLoaded = true;
+                            break;
                         }
+                    } catch(e) {
+                        console.log('❌ Не удалось:', url, e.message);
                     }
-                    values.push(current);
-                    values = values.map(v => v.replace(/^"|"$/g, '').trim());
-                    
-                    const status = values[idxStatus] || '';
-                    if (status.toLowerCase() !== 'active') continue;
-                    
-                    const stock = parseInt(values[idxStock]) || 0;
-                    if (stock <= 0) continue;
-                    
-                    products.push({
-                        name: values[idxName] || 'Без названия',
-                        article: values[idxArticle] || '',
-                        brand: values[idxBrand] || 'Другие',
-                        price: (values[idxPrice] || '0').replace('₽', '').replace(/\s/g, ''),
-                        image_url: values[idxImage] || '',
-                        description: values[idxDescription] || '',
-                        stock: stock
-                    });
                 }
                 
-                console.log(`✅ Загружено ${products.length} товаров`);
-                filterProducts();
+                if (productsLoaded) {
+                    filterProducts();
+                } else {
+                    resultsDiv.innerHTML = '<div class="error">❌ Не удалось загрузить товары<br><small>Попробуйте позже</small></div>';
+                }
                 
             } catch(e) {
                 console.error('❌ Ошибка:', e);
@@ -143,9 +93,9 @@
             let filtered = products;
             if (query) {
                 filtered = products.filter(p => 
-                    p.name.toLowerCase().includes(query) || 
-                    p.article.toLowerCase().includes(query) ||
-                    p.brand.toLowerCase().includes(query)
+                    (p.name || '').toLowerCase().includes(query) || 
+                    (p.article || '').toLowerCase().includes(query) ||
+                    (p.brand || '').toLowerCase().includes(query)
                 );
             }
             
@@ -157,10 +107,10 @@
             
             const html = filtered.map(p => `
                 <div class="product-card" onclick="selectProduct(${encodeURIComponent(JSON.stringify(p))})">
-                    <div class="product-name">${escapeHtml(p.name)}</div>
+                    <div class="product-name">${escapeHtml(p.name || 'Без названия')}</div>
                     <div class="product-article">Артикул: ${p.article || '—'}</div>
                     <div class="product-price">${formatPrice(p.price)} ₽</div>
-                    <div class="product-brand">${escapeHtml(p.brand)}</div>
+                    <div class="product-brand">${escapeHtml(p.brand || 'Другие')}</div>
                 </div>
             `).join('');
             
@@ -170,7 +120,8 @@
         function selectProduct(product) {
             if (tg) {
                 const data = encodeURIComponent(JSON.stringify(product));
-                window.location.href = `index.html?data=${data}`;
+                tg.sendData(JSON.stringify({ action: 'order', product: product }));
+                tg.close();
             } else {
                 alert('Откройте через Telegram бота');
             }
@@ -187,8 +138,8 @@
         }
         
         function formatPrice(price) {
-            let num = parseInt(String(price).replace(/[^0-9]/g, ''));
-            if (isNaN(num)) return price;
+            let num = parseInt(String(price || '0').replace(/[^0-9]/g, ''));
+            if (isNaN(num)) return price || '0';
             return num.toLocaleString('ru-RU');
         }
         
