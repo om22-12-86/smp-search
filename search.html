@@ -2,154 +2,139 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Поиск товаров - SMP Laptops</title>
-    <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Поиск товаров SMP-Laptops</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f5f5f5; padding: 12px; padding-bottom: 80px; }
-        .search-container { position: sticky; top: 0; background: #f5f5f5; padding: 12px 0; z-index: 100; }
-        .search-input { width: 100%; padding: 12px 16px; font-size: 16px; border: 1px solid #ddd; border-radius: 12px; outline: none; background: white; }
-        .search-input:focus { border-color: #0088cc; }
-        .product-card { background: white; border-radius: 12px; padding: 12px; margin-bottom: 10px; cursor: pointer; transition: transform 0.1s; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--tg-theme-bg-color, #ffffff); color: var(--tg-theme-text-color, #000000); padding: 16px; padding-bottom: 80px; }
+        .search-box { display: flex; gap: 8px; background: var(--tg-theme-secondary-bg-color, #f0f0f0); border-radius: 12px; padding: 8px 16px; margin-bottom: 12px; }
+        .search-box input { flex: 1; border: none; outline: none; font-size: 16px; background: transparent; }
+        .search-box button { background: var(--tg-theme-button-color, #2b82d6); border: none; border-radius: 8px; padding: 8px 20px; color: white; font-weight: 600; cursor: pointer; }
+        .filters { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 8px; }
+        .filter-chip { background: var(--tg-theme-secondary-bg-color, #f0f0f0); padding: 6px 14px; border-radius: 20px; font-size: 12px; white-space: nowrap; cursor: pointer; }
+        .filter-chip.active { background: var(--tg-theme-button-color, #2b82d6); color: white; }
+        .product-card { background: var(--tg-theme-secondary-bg-color, #f0f0f0); border-radius: 12px; padding: 12px; margin-bottom: 12px; cursor: pointer; transition: transform 0.1s; }
         .product-card:active { transform: scale(0.98); }
-        .product-name { font-weight: 600; font-size: 15px; margin-bottom: 6px; color: #1a1a1a; }
-        .product-article { font-size: 12px; color: #666; margin-bottom: 6px; }
-        .product-price { color: #e53935; font-weight: 700; font-size: 16px; }
-        .product-brand { font-size: 12px; color: #888; margin-top: 4px; }
-        .loading, .no-results, .error { text-align: center; padding: 40px; color: #666; }
-        .loading { color: #0088cc; }
-        .error { color: #e53935; }
-        .stats { font-size: 12px; color: #888; margin-top: 8px; text-align: center; }
+        .product-name { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+        .product-price { color: var(--tg-theme-button-color, #2b82d6); font-weight: 700; font-size: 16px; }
+        .product-article { font-size: 12px; color: var(--tg-theme-hint-color, #666); margin-top: 4px; }
+        .loading, .error { text-align: center; padding: 40px; }
+        .error { color: red; }
+        .stats { text-align: center; margin-top: 16px; font-size: 12px; color: var(--tg-theme-hint-color, #666); }
     </style>
 </head>
 <body>
-    <div class="search-container">
-        <input type="text" class="search-input" id="searchInput" placeholder="🔍 Поиск по названию или артикулу..." autocomplete="off">
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Поиск по названию, бренду или артикулу..." autocomplete="off">
+        <button onclick="searchProducts()">🔍</button>
     </div>
-    <div id="results" class="loading">📡 Загрузка товаров...</div>
-    
+    <div class="filters" id="filters"></div>
+    <div class="products-list" id="productsList"></div>
+    <div id="stats"></div>
+
     <script>
-        let tg = window.Telegram?.WebApp;
-        if (tg) { tg.ready(); tg.expand(); tg.setBackgroundColor('#f5f5f5'); }
+        const WebApp = window.Telegram.WebApp;
+        WebApp.ready();
+        WebApp.expand();
         
-        let products = [];
-        // Прямая ссылка на Google Sheets CSV
-        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQADU9Rh1HHUF1df3_aUHCGeC7O5qhrGzSHyBxAp6k_ix1zkn7DcZJihelQiq3Z9SlvQpQ2cc2cLgY6/pub?output=csv&gid=410009707';
+        let allProducts = [];
+        let currentFilter = 'all';
+        
+        // API URL - будем пробовать несколько вариантов
+        const API_URLS = [
+            'https://cal-opinion-subtle-barriers.trycloudflare.com/products',
+            'https://durable-noon-columnists-conducting.trycloudflare.com/products',
+            'https://enable-signal-manuals-theory.trycloudflare.com/products'
+        ];
         
         async function loadProducts() {
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '<div class="loading">📡 Загрузка данных из Google Sheets...</div>';
+            const container = document.getElementById('productsList');
+            container.innerHTML = '<div class="loading">📡 Загрузка товаров...</div>';
             
-            try {
-                console.log('📡 Загрузка CSV из Google Sheets...');
-                const response = await fetch(CSV_URL);
-                const csvText = await response.text();
-                
-                function parseCSVLine(line) {
-                    const result = [];
-                    let inQuote = false;
-                    let current = '';
-                    for (let i = 0; i < line.length; i++) {
-                        const char = line[i];
-                        if (char === '"') {
-                            inQuote = !inQuote;
-                        } else if (char === ',' && !inQuote) {
-                            result.push(current.trim());
-                            current = '';
-                        } else {
-                            current += char;
-                        }
+            for (const url of API_URLS) {
+                try {
+                    console.log('Пробуем:', url);
+                    const res = await fetch(url);
+                    if (res.ok) {
+                        allProducts = await res.json();
+                        console.log(`✅ Загружено ${allProducts.length} товаров с ${url}`);
+                        renderFilters();
+                        searchProducts();
+                        return;
                     }
-                    result.push(current.trim());
-                    return result.map(v => v.replace(/^"|"$/g, ''));
+                } catch(e) {
+                    console.log('❌ Ошибка:', url);
                 }
-                
-                const lines = csvText.split('\n');
-                const headers = parseCSVLine(lines[0]);
-                
-                const idxName = headers.indexOf('name');
-                const idxArticle = headers.indexOf('article');
-                const idxBrand = headers.indexOf('brand');
-                const idxPrice = headers.indexOf('price');
-                const idxStatus = headers.indexOf('status');
-                const idxStock = headers.indexOf('stock');
-                const idxImage = headers.indexOf('image_url');
-                const idxDesc = headers.indexOf('description');
-                
-                products = [];
-                
-                for (let i = 1; i < lines.length; i++) {
-                    if (!lines[i].trim()) continue;
-                    const values = parseCSVLine(lines[i]);
-                    
-                    const status = values[idxStatus] || '';
-                    if (status.toLowerCase() !== 'active') continue;
-                    
-                    const stock = parseInt(values[idxStock]) || 0;
-                    if (stock <= 0) continue;
-                    
-                    products.push({
-                        name: values[idxName] || 'Без названия',
-                        article: values[idxArticle] || '',
-                        brand: values[idxBrand] || 'Другие',
-                        price: (values[idxPrice] || '0').replace('₽', '').replace(/\s/g, ''),
-                        image_url: values[idxImage] || '',
-                        description: values[idxDesc] || '',
-                        stock: stock
-                    });
-                }
-                
-                console.log(`✅ Загружено ${products.length} товаров`);
-                filterProducts();
-                
-            } catch(e) {
-                console.error('❌ Ошибка:', e);
-                resultsDiv.innerHTML = '<div class="error">❌ Ошибка загрузки товаров<br><small>Проверьте интернет соединение</small></div>';
             }
+            
+            container.innerHTML = '<div class="error">❌ Ошибка загрузки товаров</div>';
         }
         
-        function filterProducts() {
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            let filtered = products;
-            if (query) {
-                filtered = products.filter(p => 
-                    (p.name || '').toLowerCase().includes(query) || 
-                    (p.article || '').toLowerCase().includes(query) ||
-                    (p.brand || '').toLowerCase().includes(query)
+        function renderFilters() {
+            const cats = [...new Set(allProducts.map(p => p.subcategory || 'Другие'))];
+            let html = `<div class="filter-chip active" onclick="setFilter('all')">Все (${allProducts.length})</div>`;
+            cats.forEach(cat => {
+                const count = allProducts.filter(p => p.subcategory === cat).length;
+                html += `<div class="filter-chip" onclick="setFilter('${cat.replace(/'/g, "\\'")}')">${cat} (${count})</div>`;
+            });
+            document.getElementById('filters').innerHTML = html;
+        }
+        
+        function setFilter(cat) {
+            currentFilter = cat;
+            document.querySelectorAll('.filter-chip').forEach(el => {
+                const isActive = el.innerText.startsWith(cat === 'all' ? 'Все' : cat);
+                if (isActive) el.classList.add('active');
+                else el.classList.remove('active');
+            });
+            searchProducts();
+        }
+        
+        function searchProducts() {
+            const q = document.getElementById('searchInput').value.toLowerCase().trim();
+            let filtered = allProducts;
+            
+            if (currentFilter !== 'all') {
+                filtered = filtered.filter(p => p.subcategory === currentFilter);
+            }
+            if (q) {
+                filtered = filtered.filter(p =>
+                    (p.name || '').toLowerCase().includes(q) ||
+                    (p.brand || '').toLowerCase().includes(q) ||
+                    (p.article || '').toLowerCase().includes(q)
                 );
             }
             
-            const resultsDiv = document.getElementById('results');
-            if (filtered.length === 0) {
-                resultsDiv.innerHTML = '<div class="no-results">🔍 Ничего не найдено<br><small>Попробуйте другой запрос</small></div>';
+            displayProducts(filtered);
+        }
+        
+        function displayProducts(products) {
+            const container = document.getElementById('productsList');
+            if (!products.length) {
+                container.innerHTML = '<div class="loading">🔍 Ничего не найдено</div>';
+                document.getElementById('stats').innerHTML = '';
                 return;
             }
             
-            const html = filtered.map(p => `
-                <div class="product-card" onclick="selectProduct(${encodeURIComponent(JSON.stringify(p))})">
-                    <div class="product-name">${escapeHtml(p.name)}</div>
-                    <div class="product-article">Артикул: ${p.article || '—'}</div>
+            container.innerHTML = products.map(p => `
+                <div class="product-card" onclick='openCard(${JSON.stringify(p).replace(/'/g, "\\'")})'>
+                    <div class="product-name">${escapeHtml(p.name || 'Без названия')}</div>
                     <div class="product-price">${formatPrice(p.price)} ₽</div>
-                    <div class="product-brand">${escapeHtml(p.brand)}</div>
+                    <div class="product-article">Артикул: ${p.article || '—'} • ${escapeHtml(p.brand || 'Другие')}</div>
                 </div>
             `).join('');
-            
-            resultsDiv.innerHTML = html + `<div class="stats">📦 Найдено: ${filtered.length} из ${products.length} товаров</div>`;
+            document.getElementById('stats').innerHTML = `<div class="stats">📦 Найдено: ${products.length} из ${allProducts.length} товаров</div>`;
         }
         
-        function selectProduct(product) {
-            if (tg) {
-                const data = encodeURIComponent(JSON.stringify(product));
-                window.location.href = `index.html?data=${data}`;
-            } else {
-                alert('Откройте через Telegram бота');
-            }
+        function formatPrice(price) {
+            const num = parseInt(String(price || '0').replace(/[^0-9]/g, ''));
+            return isNaN(num) ? price : num.toLocaleString('ru-RU');
         }
         
         function escapeHtml(text) {
             if (!text) return '';
-            return String(text).replace(/[&<>]/g, function(m) {
+            return String(text).replace(/[&<>]/g, m => {
                 if (m === '&') return '&amp;';
                 if (m === '<') return '&lt;';
                 if (m === '>') return '&gt;';
@@ -157,13 +142,12 @@
             });
         }
         
-        function formatPrice(price) {
-            let num = parseInt(String(price || '0').replace(/[^0-9]/g, ''));
-            if (isNaN(num)) return price || '0';
-            return num.toLocaleString('ru-RU');
+        function openCard(product) {
+            const data = btoa(unescape(encodeURIComponent(JSON.stringify(product))));
+            WebApp.openLink(`https://om22-12-86.github.io/smp-search/index.html?data=${encodeURIComponent(data)}`);
         }
         
-        document.getElementById('searchInput').addEventListener('input', filterProducts);
+        document.getElementById('searchInput').addEventListener('keypress', e => { if (e.key === 'Enter') searchProducts(); });
         loadProducts();
     </script>
 </body>
