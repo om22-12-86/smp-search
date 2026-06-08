@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Test API</title></head>
+<body>
+<div id="result">Loading...</div>
+<script>
+fetch('https://knock-civil-threshold-operating.trycloudflare.com/products')
+  .then(r => r.json())
+  .then(data => document.getElementById('result').innerHTML = '✅ Loaded ' + data.length + ' products')
+  .catch(e => document.getElementById('result').innerHTML = '❌ Error: ' + e.message);
+</script>
+</body>
+</html>
