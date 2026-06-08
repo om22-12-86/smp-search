@@ -18,13 +18,13 @@
                 const response = await fetch(API_URL);
                 if (response.ok) {
                     const data = await response.json();
-                    resultDiv.innerHTML = `<span style="color:green">✅ Успех! Загружено ${data.length} товаров</span>`;
-                    resultDiv.innerHTML += `<br>Первый товар: ${data[0]?.name || 'нет'}`;
+                    resultDiv.innerHTML = '<span style="color:green">✅ Успех! Загружено ' + data.length + ' товаров</span>';
+                    resultDiv.innerHTML += '<br>Первый товар: ' + (data[0]?.name || 'нет');
                 } else {
-                    resultDiv.innerHTML = `<span style="color:red">❌ Ошибка HTTP: ${response.status}</span>`;
+                    resultDiv.innerHTML = '<span style="color:red">❌ Ошибка HTTP: ' + response.status + '</span>';
                 }
             } catch(e) {
-                resultDiv.innerHTML = `<span style="color:red">❌ Ошибка: ${e.message}</span>`;
+                resultDiv.innerHTML = '<span style="color:red">❌ Ошибка: ' + e.message + '</span>';
             }
         }
         
