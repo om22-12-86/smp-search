@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Поиск товаров - Техно-Альянс</title>
+    <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f5f5f5; padding: 12px; padding-bottom: 80px; }
+        .search-input { width: 100%; padding: 12px 16px; font-size: 16px; border: 1px solid #ddd; border-radius: 12px; outline: none; margin-bottom: 12px; }
+        .filters { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 8px; }
+        .filter-chip { background: white; padding: 6px 14px; border-radius: 20px; font-size: 12px; white-space: nowrap; cursor: pointer; border: 1px solid #ddd; }
+        .filter-chip.active { background: #0088cc; color: white; border-color: #0088cc; }
+        .product-card { background: white; border-radius: 12px; padding: 12px; margin-bottom: 10px; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .product-card:active { transform: scale(0.98); }
+        .product-name { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+        .product-price { color: #e53935; font-weight: 700; font-size: 16px; }
+        .product-article { font-size: 12px; color: #666; }
+        .product-brand { font-size: 11px; color: #888; margin-top: 4px; }
+        .loading, .no-results, .error { text-align: center; padding: 40px; color: #666; }
+        .loading { color: #0088cc; }
+        .error { color: red; }
+        .stats { font-size: 12px; color: #888; margin-top: 8px; text-align: center; }
+    </style>
+</head>
+<body>
+    <input type="text" class="search-input" id="searchInput" placeholder="🔍 Поиск по названию, бренду или артикулу...">
+    <div class="filters" id="filters"></div>
+    <div id="results" class="loading">📡 Загрузка товаров...</div>
+
+    <script>
+        let tg = window.Telegram?.WebApp;
+        if (tg) { tg.ready(); tg.expand(); }
+        
+        let products = [];
+        let currentCategory = 'all';
+        let API_URL = window.location.origin + '/products';
+        if (API_URL.includes('github.io')) {
+            API_URL = 'https://signals-filme-shakira-wife.trycloudflare.com/products';
+        }
+        
+        async function loadProducts() {
+            try {
+                const response = await fetch(API_URL);
+                if (response.ok) {
+                    products = await response.json();
+                    renderFilters();
+                    displayProducts(products);
+                } else {
+                    throw new Error('Ошибка');
+                }
+            } catch(e) {
+                document.getElementById('results').innerHTML = '<div class="error">❌ Ошибка загрузки</div>';
+            }
+        }
+        
+        function renderFilters() {
+            const cats = [...new Set(products.map(p => p.subcategory || 'Другие'))];
+            let html = `<div class="filter-chip ${currentCategory === 'all' ? 'active' : ''}" onclick="setFilter('all')">📦 Все (${products.length})</div>`;
+            cats.forEach(cat => {
+                const count = products.filter(p => p.subcategory === cat).length;
+                html += `<div class="filter-chip ${currentCategory === cat ? 'active' : ''}" onclick="setFilter('${cat}')">${cat} (${count})</div>`;
+            });
+            document.getElementById('filters').innerHTML = html;
+        }
+        
+        function setFilter(cat) {
+            currentCategory = cat;
+            renderFilters();
+            filterProducts();
+        }
+        
+        function filterProducts() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            let filtered = products;
+            if (currentCategory !== 'all') {
+                filtered = filtered.filter(p => p.subcategory === currentCategory);
+            }
+            if (query) {
+                filtered = filtered.filter(p => 
+                    p.name.toLowerCase().includes(query) || 
+                    p.article.toLowerCase().includes(query) ||
+                    p.brand.toLowerCase().includes(query)
+                );
+            }
+            displayProducts(filtered);
+        }
+        
+        function displayProducts(filtered) {
+            const resultsDiv = document.getElementById('results');
+            if (filtered.length === 0) {
+                resultsDiv.innerHTML = '<div class="no-results">🔍 Ничего не найдено</div>';
+                return;
+            }
+            const html = filtered.map(p => `
+                <div class="product-card" onclick="openProduct('${p.article}')">
+                    <div class="product-name">${escapeHtml(p.name)}</div>
+                    <div class="product-price">${formatPrice(p.price)} ₽</div>
+                    <div class="product-article">Артикул: ${p.article}</div>
+                    <div class="product-brand">${escapeHtml(p.brand)}</div>
+                </div>
+            `).join('');
+            resultsDiv.innerHTML = html + `<div class="stats">📦 Найдено: ${filtered.length} из ${products.length}</div>`;
+        }
+        
+        function openProduct(article) {
+            if (tg) {
+                tg.openLink(`index.html?article=${encodeURIComponent(article)}`);
+            }
+        }
+        
+        function formatPrice(price) {
+            let num = parseInt(String(price).replace(/[^0-9]/g, ''));
+            return isNaN(num) ? price : num.toLocaleString('ru-RU');
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            return String(text).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]);
+        }
+        
+        document.getElementById('searchInput').addEventListener('input', filterProducts);
+        loadProducts();
+    </script>
+</body>
+</html>
