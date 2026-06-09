@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Карточка товара - SMP Laptops</title>
+    <title>Карточка товара - Техно-Альянс</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -23,93 +23,166 @@
             font-size: 14px; line-height: 1.5; margin: 16px 0; padding: 12px;
             background: var(--tg-theme-secondary-bg-color, #f0f0f0); border-radius: 12px;
         }
-        .product-image { width: 100%; max-height: 300px; object-fit: contain; border-radius: 12px; margin-bottom: 16px; background: #f0f0f0; }
-        .order-button {
-            width: 100%; padding: 16px; background: var(--tg-theme-button-color, #2b82d6);
-            color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold;
-            cursor: pointer; transition: opacity 0.2s;
+        .slider-container {
+            position: relative;
+            margin-bottom: 16px;
+            background: #f0f0f0;
+            border-radius: 12px;
+            overflow: hidden;
         }
-        .order-button:active { opacity: 0.8; }
+        .slider-image {
+            width: 100%;
+            height: 280px;
+            object-fit: contain;
+            display: block;
+        }
+        .slider-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .slider-btn.prev { left: 10px; }
+        .slider-btn.next { right: 10px; }
+        .photo-counter { text-align: center; font-size: 12px; color: #888; margin-top: 8px; }
+        .order-button {
+            width: 100%; padding: 16px; background: #0088cc;
+            color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold;
+            cursor: pointer;
+            margin-top: 16px;
+        }
         .loading, .error { text-align: center; padding: 40px; }
         .error { color: red; }
+        .section-title { font-weight: bold; margin-bottom: 8px; font-size: 16px; }
     </style>
 </head>
 <body>
     <div id="app" class="loading">📦 Загрузка товара...</div>
-
     <script>
-        const WebApp = window.Telegram.WebApp;
-        WebApp.ready();
-        WebApp.expand();
-
+        let tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        const API_URL = 'https://PLACEHOLDER_URL.trycloudflare.com/products';
+        const BOT_USERNAME = 'BotWork1_bot';
+        
         async function loadProduct() {
             const urlParams = new URLSearchParams(window.location.search);
-            if (!urlParams.has('data')) {
-                showError('Ссылка повреждена');
-                return;
-            }
-
+            const article = urlParams.get('article');
+            if (!article) { showError('Товар не найден'); return; }
             try {
-                const encoded = urlParams.get('data');
-                const jsonStr = atob(decodeURIComponent(encoded));
-                const product = JSON.parse(jsonStr);
-
-                let html = `<div class="product-card">`;
-
-                if (product.image_url) {
-                    const firstImage = product.image_url.split(',')[0].trim();
-                    html += `<img class="product-image" src="${firstImage}" alt="Фото товара" onerror="this.style.display='none'">`;
-                }
-
-                html += `<div class="product-name">${escapeHtml(product.name || 'Без названия')}</div>`;
-                html += `<div class="product-price">${formatPrice(product.price)} ₽</div>`;
-                html += `<div class="product-article">Артикул: ${escapeHtml(product.article || '—')}</div>`;
-                html += `<div class="product-brand">Бренд: ${escapeHtml(product.brand || 'Другие')}</div>`;
-                html += `<div class="product-subcategory">Категория: ${escapeHtml(product.subcategory || '—')}</div>`;
-                html += `<div class="product-stock">${parseInt(product.stock) > 0 ? '✓ В наличии: ' + product.stock + ' шт.' : '✗ Нет в наличии'}</div>`;
-
-                if (product.description) {
-                    html += `<div class="product-description">${escapeHtml(product.description)}</div>`;
-                }
-                if (product.characteristics) {
-                    html += `<div class="product-characteristics">${escapeHtml(product.characteristics)}</div>`;
-                }
-
-                html += `<button class="order-button" onclick="orderProduct('${product.article}', '${escapeHtml(product.name)}')">📦 Заказать</button>`;
-                html += `</div>`;
-
-                document.getElementById('app').innerHTML = html;
-
-            } catch(e) {
-                console.error(e);
-                showError('Ошибка загрузки данных');
-            }
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Ошибка загрузки');
+                const products = await response.json();
+                const product = products.find(p => p.article === article);
+                if (!product) { showError('Товар не найден'); return; }
+                displayProduct(product);
+            } catch(e) { showError('Ошибка загрузки данных'); }
         }
-
+        
         function formatPrice(price) {
             const num = parseInt(String(price || '0').replace(/[^0-9]/g, ''));
             return isNaN(num) ? price : num.toLocaleString('ru-RU');
         }
-
+        
         function escapeHtml(text) {
             if (!text) return '';
-            return String(text).replace(/[&<>]/g, m => {
+            return String(text).replace(/[&<>]/g, function(m) {
                 if (m === '&') return '&amp;';
                 if (m === '<') return '&lt;';
                 if (m === '>') return '&gt;';
                 return m;
             });
         }
-
-        function orderProduct(article, name) {
-            const text = `Здравствуйте! Хочу заказать: ${name} (артикул: ${article})`;
-            WebApp.openTelegramLink(`https://t.me/BotWork1_bot?text=${encodeURIComponent(text)}`);
+        
+        function getAllImages(urls) {
+            if (!urls) return [];
+            return urls.split(',').map(u => u.trim()).filter(u => u.startsWith('http'));
         }
-
+        
+        function showImage(index) {
+            const img = document.getElementById('sliderImage');
+            const counter = document.getElementById('photoCounter');
+            if (img && currentImages[index]) {
+                img.src = currentImages[index];
+                if (counter) counter.innerHTML = `📸 ${index + 1} / ${currentImages.length}`;
+            }
+            currentImageIndex = index;
+        }
+        
+        function nextImage() {
+            if (currentImages.length === 0) return;
+            let newIndex = currentImageIndex + 1;
+            if (newIndex >= currentImages.length) newIndex = 0;
+            showImage(newIndex);
+        }
+        
+        function prevImage() {
+            if (currentImages.length === 0) return;
+            let newIndex = currentImageIndex - 1;
+            if (newIndex < 0) newIndex = currentImages.length - 1;
+            showImage(newIndex);
+        }
+        
+        let currentImageIndex = 0;
+        let currentImages = [];
+        
+        function displayProduct(product) {
+            currentImages = getAllImages(product.image_url);
+            let sliderHtml = '';
+            if (currentImages.length > 0) {
+                sliderHtml = `
+                    <div class="slider-container">
+                        <img class="slider-image" id="sliderImage" src="${currentImages[0]}">
+                        ${currentImages.length > 1 ? `
+                            <button class="slider-btn prev" onclick="prevImage()">◀</button>
+                            <button class="slider-btn next" onclick="nextImage()">▶</button>
+                        ` : ''}
+                    </div>
+                    <div class="photo-counter" id="photoCounter">📸 1 / ${currentImages.length}</div>
+                `;
+            } else {
+                sliderHtml = `<div style="background:#f0f0f0; border-radius:12px; padding:40px; text-align:center; margin-bottom:16px;">📷 Нет фото</div>`;
+            }
+            
+            let html = `
+                <div class="product-card">
+                    ${sliderHtml}
+                    <div class="product-name">${escapeHtml(product.name || 'Без названия')}</div>
+                    <div class="product-price">${formatPrice(product.price)} ₽</div>
+                    <div class="product-article">Артикул: ${escapeHtml(product.article || '—')}</div>
+                    <div class="product-brand">Бренд: ${escapeHtml(product.brand || 'Другие')}</div>
+                    <div class="product-subcategory">Категория: ${escapeHtml(product.subcategory || '—')}</div>
+                    <div class="product-stock">${parseInt(product.stock) > 0 ? '✓ В наличии: ' + product.stock + ' шт.' : '✗ Нет в наличии'}</div>
+            `;
+            if (product.description && product.description !== 'nan') {
+                html += `<div class="product-description"><div class="section-title">📝 Описание</div>${escapeHtml(product.description)}</div>`;
+            }
+            if (product.characteristics && product.characteristics !== 'nan') {
+                html += `<div class="product-characteristics"><div class="section-title">⚙️ Характеристики</div>${escapeHtml(product.characteristics)}</div>`;
+            }
+            html += `<button class="order-button" onclick="orderProduct('${escapeHtml(product.article)}', '${escapeHtml(product.name)}')">📦 Заказать</button></div>`;
+            document.getElementById('app').innerHTML = html;
+        }
+        
+        function orderProduct(article, name) {
+            tg.sendData(JSON.stringify({ action: 'order', article: article, name: name }));
+            tg.close();
+        }
+        
         function showError(msg) {
             document.getElementById('app').innerHTML = `<div class="error">❌ ${msg}</div>`;
         }
-
+        
         loadProduct();
     </script>
 </body>
