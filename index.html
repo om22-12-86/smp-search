@@ -2,27 +2,76 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Карточка товара - Техно-Альянс</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f5f5f5; padding: 16px; }
-        .product-card { background: white; border-radius: 16px; padding: 20px; }
-        .product-name { font-size: 20px; font-weight: bold; margin-bottom: 12px; }
-        .product-price { font-size: 28px; font-weight: bold; color: #e53935; margin-bottom: 16px; }
-        .product-article, .product-brand, .product-subcategory { font-size: 14px; color: #666; margin-bottom: 8px; }
-        .order-button { width: 100%; padding: 16px; background: #0088cc; color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 16px; }
-        .loading { text-align: center; padding: 40px; }
-        .error { color: red; text-align: center; padding: 40px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 16px;
+        }
+        .product-card { max-width: 500px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .slider-container { position: relative; background: #000; background: #1a1a1a; }
+        .slider-image { width: 100%; height: 300px; object-fit: contain; cursor: pointer; }
+        .slider-btn {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: rgba(0,0,0,0.5); color: white; border: none;
+            cursor: pointer; width: 40px; height: 40px; border-radius: 50%;
+            font-size: 20px; display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+        }
+        .slider-btn:hover { background: rgba(0,0,0,0.8); }
+        .slider-btn.prev { left: 10px; }
+        .slider-btn.next { right: 10px; }
+        .photo-counter { text-align: center; font-size: 12px; color: #888; padding: 8px; background: #1a1a1a; color: white; }
+        .product-info { padding: 20px; }
+        .product-name { font-size: 20px; font-weight: 600; margin-bottom: 12px; color: #1a1a1a; line-height: 1.3; }
+        .product-price { font-size: 28px; font-weight: 700; color: #e53935; margin-bottom: 16px; }
+        .product-article, .product-brand, .product-subcategory, .product-stock { font-size: 14px; color: #666; margin-bottom: 8px; }
+        .product-description, .product-characteristics { font-size: 14px; line-height: 1.5; margin: 16px 0; padding: 12px; background: #f5f5f5; border-radius: 12px; }
+        .section-title { font-weight: bold; margin-bottom: 8px; font-size: 16px; color: #333; }
+        .order-button {
+            width: 100%; padding: 16px; background: #0088cc; color: white;
+            border: none; border-radius: 12px; font-size: 18px; font-weight: bold;
+            cursor: pointer; margin-top: 16px; transition: opacity 0.2s;
+        }
+        .order-button:active { opacity: 0.8; }
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center;
+        }
+        .modal img { max-width: 95%; max-height: 95%; object-fit: contain; }
+        .modal-close {
+            position: absolute; top: 20px; right: 20px; color: white; font-size: 30px;
+            cursor: pointer; background: none; border: none; width: 50px; height: 50px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        }
+        .modal-nav { position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; color: white; font-size: 14px; }
+        .loading, .error { text-align: center; padding: 40px; color: #666; }
+        .error { color: red; }
     </style>
 </head>
 <body>
-    <div id="app" class="loading">📦 Загрузка...</div>
+    <div id="app" class="loading">📦 Загрузка товара...</div>
+    
+    <!-- Модальное окно для увеличенного фото -->
+    <div id="modal" class="modal" onclick="closeModal()">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        <img id="modalImage" src="">
+        <div class="modal-nav" id="modalNav"></div>
+    </div>
+
     <script>
         let tg = window.Telegram.WebApp;
-        tg.ready(); tg.expand();
+        tg.ready();
+        tg.expand();
         
-        const API_URL = 'https://signals-filme-shakira-wife.trycloudflare.com/products';
+        let currentImages = [];
+        let currentImageIndex = 0;
+        let currentProduct = null;
+        const API_URL = window.location.origin + '/products';
         const BOT_USERNAME = 'BotWork1_bot';
         
         async function loadProduct() {
@@ -31,34 +80,114 @@
             if (!article) { showError('Товар не найден'); return; }
             try {
                 const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Ошибка загрузки');
                 const products = await response.json();
                 const product = products.find(p => p.article === article);
                 if (!product) { showError('Товар не найден'); return; }
                 displayProduct(product);
-            } catch(e) { showError('Ошибка загрузки'); }
+            } catch(e) { showError('Ошибка загрузки данных'); }
         }
         
-        function displayProduct(p) {
-            document.getElementById('app').innerHTML = `
+        function getAllImages(urls) {
+            if (!urls) return [];
+            return urls.split(',').map(u => u.trim()).filter(u => u.startsWith('http'));
+        }
+        
+        function showSliderImage(index) {
+            const img = document.getElementById('sliderImage');
+            const counter = document.getElementById('photoCounter');
+            if (img && currentImages[index]) {
+                img.src = currentImages[index];
+                if (counter) counter.innerHTML = `📸 ${index + 1} / ${currentImages.length}`;
+            }
+            currentImageIndex = index;
+        }
+        
+        function nextImage() {
+            if (currentImages.length === 0) return;
+            let newIndex = currentImageIndex + 1;
+            if (newIndex >= currentImages.length) newIndex = 0;
+            showSliderImage(newIndex);
+        }
+        
+        function prevImage() {
+            if (currentImages.length === 0) return;
+            let newIndex = currentImageIndex - 1;
+            if (newIndex < 0) newIndex = currentImages.length - 1;
+            showSliderImage(newIndex);
+        }
+        
+        function openFullscreen(index) {
+            const modal = document.getElementById('modal');
+            const modalImg = document.getElementById('modalImage');
+            const modalNav = document.getElementById('modalNav');
+            if (modal && modalImg && currentImages[index]) {
+                modalImg.src = currentImages[index];
+                modal.style.display = 'flex';
+                modalNav.innerHTML = `📸 ${index + 1} / ${currentImages.length} • нажмите на фото или кнопку ✕ для закрытия`;
+                modalImg.onclick = function(e) { e.stopPropagation(); closeModal(); };
+            }
+        }
+        
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+        
+        function displayProduct(product) {
+            currentProduct = product;
+            currentImages = getAllImages(product.image_url);
+            
+            let sliderHtml = '';
+            if (currentImages.length > 0) {
+                sliderHtml = `
+                    <div class="slider-container">
+                        <img class="slider-image" id="sliderImage" src="${currentImages[0]}" onclick="openFullscreen(${currentImageIndex})">
+                        ${currentImages.length > 1 ? `
+                            <button class="slider-btn prev" onclick="prevImage()">◀</button>
+                            <button class="slider-btn next" onclick="nextImage()">▶</button>
+                        ` : ''}
+                    </div>
+                    <div class="photo-counter" id="photoCounter">📸 1 / ${currentImages.length}</div>
+                `;
+            } else {
+                sliderHtml = `<div style="background:#e0e0e0; border-radius:16px 16px 0 0; padding:40px; text-align:center;">📷 Нет фото</div>`;
+            }
+            
+            let html = `
                 <div class="product-card">
-                    <div class="product-name">${escapeHtml(p.name)}</div>
-                    <div class="product-price">${formatPrice(p.price)} ₽</div>
-                    <div class="product-article">Артикул: ${escapeHtml(p.article)}</div>
-                    <div class="product-brand">Бренд: ${escapeHtml(p.brand)}</div>
-                    <div class="product-subcategory">Категория: ${escapeHtml(p.subcategory)}</div>
-                    <button class="order-button" onclick="orderProduct('${escapeHtml(p.article)}', '${escapeHtml(p.name)}')">📦 Заказать</button>
-                </div>
+                    ${sliderHtml}
+                    <div class="product-info">
+                        <div class="product-name">${escapeHtml(product.name)}</div>
+                        <div class="product-price">${formatPrice(product.price)} ₽</div>
+                        <div class="product-article">Артикул: ${escapeHtml(product.article)}</div>
+                        <div class="product-brand">Бренд: ${escapeHtml(product.brand)}</div>
+                        <div class="product-subcategory">Категория: ${escapeHtml(product.subcategory)}</div>
+                        <div class="product-stock">${parseInt(product.stock) > 0 ? '✓ В наличии: ' + product.stock + ' шт.' : '✗ Нет в наличии'}</div>
             `;
+            
+            if (product.description && product.description !== 'nan') {
+                html += `<div class="product-description"><div class="section-title">📝 Описание</div>${escapeHtml(product.description)}</div>`;
+            }
+            if (product.characteristics && product.characteristics !== 'nan') {
+                html += `<div class="product-characteristics"><div class="section-title">⚙️ Характеристики</div>${escapeHtml(product.characteristics)}</div>`;
+            }
+            
+            html += `<button class="order-button" onclick="orderProduct()">📦 Заказать</button></div></div>`;
+            document.getElementById('app').innerHTML = html;
         }
         
-        function orderProduct(article, name) {
-            tg.openTelegramLink(`https://t.me/${BOT_USERNAME}?text=Здравствуйте! Хочу заказать: ${name} (артикул: ${article})`);
-            tg.close();
+        function orderProduct() {
+            if (currentProduct) {
+                const text = `Здравствуйте! Хочу заказать: ${currentProduct.name} (артикул: ${currentProduct.article})`;
+                tg.openTelegramLink(`https://t.me/${BOT_USERNAME}?text=${encodeURIComponent(text)}`);
+                tg.close();
+            }
         }
         
-        function formatPrice(price) { let num = parseInt(String(price).replace(/[^0-9]/g, '')); return isNaN(num) ? price : num.toLocaleString('ru-RU'); }
+        function formatPrice(price) { let num = parseInt(String(price || '0').replace(/[^0-9]/g, '')); return isNaN(num) ? price : num.toLocaleString('ru-RU'); }
         function escapeHtml(text) { if (!text) return ''; return String(text).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]); }
         function showError(msg) { document.getElementById('app').innerHTML = `<div class="error">❌ ${msg}</div>`; }
+        
         loadProduct();
     </script>
 </body>
